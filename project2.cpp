@@ -156,8 +156,8 @@ void ConvBNReLU(int x, int cnt, Matrix* a, int d, Matrix* s,int cnt0) {//x:convæ
                 sum += s[k].getD(i + 1, j + 1) * weight[c + 8];
 
             }
+            
             if (sum < 0) sum = 0;
-            if (sum > 10) sum = 0;
 
             if (d==1) {
                 a->setD(i-1,j-1,sum);
