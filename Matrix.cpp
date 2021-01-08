@@ -48,9 +48,6 @@ void Matrix::MaxPoolAdd0(int w,int h) {//w:宽(x) h:高(y)
 	Matrix a = Matrix(row+2,col+2);
 	
 	float t1 = 0, t2 = 0, t3 = 0;
-
-	int nm = 0;
-
 	for (int i = 0; i < rowN; i += h) {
 		for (int j = 0; j < colN; j += w) {
 			
