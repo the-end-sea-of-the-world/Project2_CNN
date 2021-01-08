@@ -27,12 +27,16 @@ Matrix tran3[32] = { Matrix(8,8), Matrix(8,8), Matrix(8,8), Matrix(8,8), Matrix(
 
 int main()
 {
-    string name1 = "face1.jpg";
-    string name2 = "bg1.jpg";
+    string name1 = "face.jpg";
+    string name2 = "bg.jpg";
+    string name3 = "face1.jpg";
+    string name4 = "bg1.jpg";
+
+    string name = name1;
 
     DWORD start_time = GetTickCount();
 
-    Mat Image = imread(name1,1);
+    Mat Image = imread(name,1);
     if (Image.empty())
     {
         cout << "Can not load image." << endl;
@@ -100,7 +104,7 @@ int main()
 
     DWORD end_time = GetTickCount();
     
-    cout << name1 << endl;
+    cout << name << endl;
     cout << "bg score: " << x << " face score: " << y << endl;
     cout << "The run time is:" << (end_time - start_time) << "ms!" << endl;
 }
