@@ -1,6 +1,7 @@
 #include "Matrix.h"
 #include <cstddef>
 #include <iostream>
+#include <opencv2/core/cvdef.h>
 using namespace std;
 
 Matrix::Matrix() {
@@ -14,6 +15,7 @@ Matrix::Matrix(int rN, int cN) {
 	rowN = rN;
 	colN = cN;
 	data = new float [rN * cN];
+	for (int i = 0; i < rN * cN; i++) data[i] = 0.0f;
 }
 
 Matrix::~Matrix() {
@@ -44,30 +46,25 @@ void Matrix::MaxPoolAdd0(int w,int h) {//w:宽(x) h:高(y)
 	int row = rowN / h;
 	int col = colN / w;
 	Matrix a = Matrix(row+2,col+2);
-	for (int j = 0; j < col + 2; j++) {
-		a.setD(j, 0, 0);
-		a.setD(j, col + 1, 0);
-	}
-	for (int j = 0; j < row + 2; j++) {
-		a.setD(0, j, 0);
-		a.setD(row + 1, j, 0);
-	}
+	
+	float t1 = 0, t2 = 0, t3 = 0;
+
+	int nm = 0;
 
 	for (int i = 0; i < rowN; i += h) {
 		for (int j = 0; j < colN; j += w) {
 			
-			float c = getD(i, j);
-			if (getD(i, j+1) > c) c = getD(i, j+1);
-			if (getD(i+1, j) > c) c = getD(i+1, j);
-			if (getD(i+1, j+1) > c) c = getD(i+1, j+1);
+			t1 = MAX(getD(i, j),getD(i,j+1));
+			t2 = MAX(getD(i+1,j),getD(i+1,j+1));
+			t3 = MAX(t1,t2);
 
-			a.setD(i/h+1,j/w+1,c);
-
+			a.setD(i/h+1,j/w+1,t3);
 		}
 	}
 	
+	float* trans = data;
 	rowN = a.rowN;
 	colN = a.colN;
 	data = a.data;
-	a.data = NULL;
+	a.data = trans;
 }
