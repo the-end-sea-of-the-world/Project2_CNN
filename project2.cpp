@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include<Windows.h> 
@@ -21,19 +20,19 @@ float fc0_bias[2] = { -0.0040076836f, 0.00010113005 };
 void ConvBNReLU(int x, int cnt, Matrix* a, int d,Matrix* s,int cnt0); 
 //x:conv次数 cnt:通道数 a:新矩阵 d:conv跳跃数 s:原矩阵集 cnt0:原通道数
 
-Matrix* rgb = new Matrix[3];//0:r 1:g 2:b
-Matrix* tran1 = new Matrix[16];
-Matrix* tran2 = new Matrix[32];
-Matrix* tran3 = new Matrix[32];
+Matrix rgb[3] = {Matrix(130,130),Matrix(130,130),Matrix(130,130)};//0:r 1:g 2:b
+Matrix tran1[16] = { Matrix(64,64), Matrix(64,64), Matrix(64,64), Matrix(64,64), Matrix(64,64), Matrix(64,64), Matrix(64,64), Matrix(64,64), Matrix(64,64), Matrix(64,64), Matrix(64,64), Matrix(64,64), Matrix(64,64), Matrix(64,64), Matrix(64,64), Matrix(64,64)};
+Matrix tran2[32] = { Matrix(32,32),Matrix(32,32), Matrix(32,32), Matrix(32,32), Matrix(32,32), Matrix(32,32), Matrix(32,32), Matrix(32,32), Matrix(32,32), Matrix(32,32), Matrix(32,32), Matrix(32,32), Matrix(32,32), Matrix(32,32), Matrix(32,32), Matrix(32,32) ,Matrix(32,32),Matrix(32,32), Matrix(32,32), Matrix(32,32), Matrix(32,32), Matrix(32,32), Matrix(32,32), Matrix(32,32), Matrix(32,32), Matrix(32,32), Matrix(32,32), Matrix(32,32), Matrix(32,32), Matrix(32,32), Matrix(32,32), Matrix(32,32) };
+Matrix tran3[32] = { Matrix(8,8), Matrix(8,8), Matrix(8,8), Matrix(8,8), Matrix(8,8), Matrix(8,8), Matrix(8,8), Matrix(8,8), Matrix(8,8), Matrix(8,8), Matrix(8,8), Matrix(8,8), Matrix(8,8), Matrix(8,8), Matrix(8,8), Matrix(8,8),Matrix(8,8), Matrix(8,8), Matrix(8,8), Matrix(8,8), Matrix(8,8), Matrix(8,8), Matrix(8,8), Matrix(8,8), Matrix(8,8), Matrix(8,8), Matrix(8,8), Matrix(8,8), Matrix(8,8), Matrix(8,8), Matrix(8,8), Matrix(8,8) };
 
 int main()
 {
-    string name1 = "face.jpg";
-    string name2 = "bg.jpg";
+    string name1 = "face1.jpg";
+    string name2 = "bg1.jpg";
 
     DWORD start_time = GetTickCount();
 
-    Mat Image = imread("D:/C_C++/C_C++_Program_Design/project/project2/project2/"+name2,1);
+    Mat Image = imread(name1,1);
     if (Image.empty())
     {
         cout << "Can not load image." << endl;
@@ -43,52 +42,39 @@ int main()
     int ROW = Image.rows;
     int COL = Image.cols;
 
-    for (int i = 0; i < 3;i++) {
-        rgb[i] = Matrix(ROW+2,COL+2);
-    }
-    for (int i = 0; i <ROW+2; i++) {
-        for (int j = 0; j < COL+2; j++) {
-            
-            if (i==0 || j==0 || i==ROW+1 || j==COL+1) {
-                rgb[0].setD(i,j,0.0f);
-                rgb[1].setD(i, j, 0.0f);
-                rgb[2].setD(i, j, 0.0f);
-            }
-            else {
-                float b = float(Image.at<Vec3b>(i - 1, j - 1)[0]) / 255.0f;
-                float g = float(Image.at<Vec3b>(i - 1, j - 1)[1]) / 255.0f;
-                float r = float(Image.at<Vec3b>(i - 1, j - 1)[2]) / 255.0f;
-                rgb[0].setD(i, j, r);
-                rgb[1].setD(i, j, g);
-                rgb[2].setD(i, j, b);
-            }
+    float r, g, b;
+
+    for (int i = 0; i <ROW; i++) {
+        for (int j = 0; j < COL; j++) {
+            b = Image.at<Vec3b>(i, j)[0] / 255.0f;
+            g = Image.at<Vec3b>(i, j)[1] / 255.0f;
+            r = Image.at<Vec3b>(i, j)[2] / 255.0f;
+            rgb[0].setD(i+1, j+1, r);
+            rgb[1].setD(i+1, j+1, g);
+            rgb[2].setD(i+1, j+1, b);
         }
     }
-    
+
     ROW /= 2;
     COL /= 2;
     for (int i = 0; i < 16;i++) {
-        tran1[i] = Matrix(ROW,COL);
         ConvBNReLU(0,i,&tran1[i],2,rgb,3);
         tran1[i].MaxPoolAdd0(2,2);
     }
 
     ROW /= 2;
     COL /= 2;
-    for (int i = 0; i < 32; i++) {
-        tran2[i] = Matrix(ROW, COL);
+    for (int i = 0; i < 32; i++) { 
         ConvBNReLU(1, i, &tran2[i], 1, tran1, 16);
         tran2[i].MaxPoolAdd0(2, 2);
     }
-    
+
     ROW /= 4;
     COL /= 4;
     for (int i = 0; i < 32; i++) {
-        tran3[i] = Matrix(ROW, COL);
-        ConvBNReLU(2, i, &tran3[i], 2, tran2, 32);
+        ConvBNReLU(2, i, &tran3[i], 2, tran2, 32);  
     }
 
-    
     int cnt = 0;
     float ans0 = fc0_bias[0];
     float ans1 = fc0_bias[1];
@@ -96,27 +82,26 @@ int main()
         for (int i = 0; i < ROW; i++) {
             for (int j = 0; j < COL; j++) {
                 ans0 += tran3[k].getD(i, j) * fc0_weight[cnt];
-                cnt++;
+                cnt++; 
             }
         }
     }
     for (int k = 0; k < 32; k++) {
         for (int i = 0; i < ROW; i++) {
             for (int j = 0; j < COL; j++) {
-                ans0 += tran3[k].getD(i, j) * fc0_weight[cnt];
+                ans1 += tran3[k].getD(i, j) * fc0_weight[cnt];
                 cnt++;
             }
         }
     }
-    if (ans0 < 0) ans0 = -ans0;
-    if (ans1 < 0) ans1 = -ans1;
-    float a = ans0 / (ans0 + ans1);
-    float b = ans1 / (ans0 + ans1);
+    
+    float x = exp(ans0) / (exp(ans0) + exp(ans1));
+    float y = exp(ans1) / (exp(ans0) + exp(ans1));
 
     DWORD end_time = GetTickCount();
     
-    cout << name2 << endl;
-    cout << "bg score: " << a << " face score: " << b << endl;
+    cout << name1 << endl;
+    cout << "bg score: " << x << " face score: " << y << endl;
     cout << "The run time is:" << (end_time - start_time) << "ms!" << endl;
 }
 
@@ -126,6 +111,7 @@ void ConvBNReLU(int x, int cnt, Matrix* a, int d, Matrix* s,int cnt0) {//x:conv�
     float* bias;
     int row = s[0].getRowN();
     int col = s[0].getColN();
+
     if (x == 0) {
         weight = conv0_weight;
         bias = conv0_bias;
@@ -138,27 +124,27 @@ void ConvBNReLU(int x, int cnt, Matrix* a, int d, Matrix* s,int cnt0) {//x:conv�
         weight = conv2_weight;
         bias = conv2_bias;
     }
-   
+
     for (int i = 1; i < row-1; i += d) {
         for (int j = 1; j < col-1; j += d) {
-            float sum = bias[cnt];
+            float sum = bias[cnt],t1,t2,t3,t4,t5,t6,t7,t8,t9;
             for (int k = 0; k < cnt0; k++) {
                 int c = 9 * cnt0 * cnt + 9 * k;
-                
-                sum += s[k].getD(i - 1, j - 1) * weight[c];
-                sum += s[k].getD(i - 1, j) * weight[c + 1];
-                sum += s[k].getD(i - 1, j + 1) * weight[c + 2];
-                sum += s[k].getD(i, j - 1) * weight[c + 3];
-                sum += s[k].getD(i, j) * weight[c + 4];
-                sum += s[k].getD(i, j + 1) * weight[c + 5];
-                sum += s[k].getD(i + 1, j - 1) * weight[c + 6];
-                sum += s[k].getD(i + 1, j) * weight[c + 7];
-                sum += s[k].getD(i + 1, j + 1) * weight[c + 8];
 
+                t1 = s[k].getD(i - 1, j - 1) * weight[c];
+                t2 = s[k].getD(i - 1, j) * weight[c + 1];
+                t3 = s[k].getD(i - 1, j + 1) * weight[c + 2];
+                t4 = s[k].getD(i, j - 1) * weight[c + 3];
+                t5 = s[k].getD(i, j) * weight[c + 4];
+                t6 = s[k].getD(i, j + 1) * weight[c + 5];
+                t7 = s[k].getD(i + 1, j - 1) * weight[c + 6];
+                t8 = s[k].getD(i + 1, j) * weight[c + 7];
+                t9 = s[k].getD(i + 1, j + 1) * weight[c + 8];
+
+                sum += t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8 + t9;
             }
-            
             if (sum < 0) sum = 0;
-
+            
             if (d==1) {
                 a->setD(i-1,j-1,sum);
             }
