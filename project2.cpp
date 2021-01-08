@@ -2,6 +2,8 @@
 #include <opencv2/opencv.hpp>
 #include<Windows.h> 
 #include "Matrix.h"
+#include "omp.h"
+
 using namespace cv;
 using namespace std;
 
@@ -48,7 +50,9 @@ int main()
 
     float r, g, b;
 
+    #pragma omp parallel for
     for (int i = 0; i <ROW; i++) {
+        #pragma omp parallel for
         for (int j = 0; j < COL; j++) {
             b = Image.at<Vec3b>(i, j)[0] / 255.0f;
             g = Image.at<Vec3b>(i, j)[1] / 255.0f;
@@ -82,16 +86,23 @@ int main()
     int cnt = 0;
     float ans0 = fc0_bias[0];
     float ans1 = fc0_bias[1];
+
+    #pragma omp parallel for
     for (int k = 0; k < 32;k++) {
+        #pragma omp parallel for
         for (int i = 0; i < ROW; i++) {
+            #pragma omp parallel for
             for (int j = 0; j < COL; j++) {
                 ans0 += tran3[k].getD(i, j) * fc0_weight[cnt];
                 cnt++; 
             }
         }
     }
+    #pragma omp parallel for
     for (int k = 0; k < 32; k++) {
+        #pragma omp parallel for
         for (int i = 0; i < ROW; i++) {
+            #pragma omp parallel for
             for (int j = 0; j < COL; j++) {
                 ans1 += tran3[k].getD(i, j) * fc0_weight[cnt];
                 cnt++;
@@ -129,9 +140,12 @@ void ConvBNReLU(int x, int cnt, Matrix* a, int d, Matrix* s,int cnt0) {//x:convæ
         bias = conv2_bias;
     }
 
+    #pragma omp parallel for
     for (int i = 1; i < row-1; i += d) {
+        #pragma omp parallel for
         for (int j = 1; j < col-1; j += d) {
             float sum = bias[cnt],t1,t2,t3,t4,t5,t6,t7,t8,t9;
+            #pragma omp parallel for
             for (int k = 0; k < cnt0; k++) {
                 int c = 9 * cnt0 * cnt + 9 * k;
 
